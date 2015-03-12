@@ -15,7 +15,6 @@ bool mergeDown(int values[4][4]);
 void copyArray(int toBeCopied[4][4], int copy[4][4]);
 void undo(int values[4][4], int prevValues[4][4]);
 
-// TODO: figure out how to github
 int main(int argc, char* argv[])
 {
 	const char *title[7] = {
