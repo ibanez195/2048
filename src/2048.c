@@ -15,6 +15,7 @@ bool mergeDown(int values[4][4]);
 void copyArray(int toBeCopied[4][4], int copy[4][4]);
 void undo(int values[4][4], int prevValues[4][4]);
 
+// make option to continue after winning
 int main(int argc, char* argv[])
 {
 	const char *title[7] = {
@@ -27,8 +28,18 @@ int main(int argc, char* argv[])
 		"    \\|_______|\\|_______|      \\|__|\\|_______|"
 	};
 
+	const char *win_message[6] = {
+		"__  ______  __  __   _       ______  _   ____",
+		"\\ \\/ / __ \\/ / / /  | |     / / __ \\/ | / / /",
+		" \\  / / / / / / /   | | /| / / / / /  |/ / / ",
+		" / / /_/ / /_/ /    | |/ |/ / /_/ / /|  /_/  ",
+		"/_/\\____/\\____/     |__/|__/\\____/_/ |_(_)   ",
+	};
+
 	// initialize ncurses
 	init();
+
+	bool won = false;
 
 
 	// array of windows to represent cells on board
@@ -86,7 +97,7 @@ int main(int argc, char* argv[])
 	drawBoard(windowArray, valueArray);
 
 	// main game logic loop
-	while(true)
+	while(!won)
 	{
 		// create copy for undo purposes
 		int tempCopy[4][4];
@@ -124,6 +135,17 @@ int main(int argc, char* argv[])
 				copyArray(tempCopy, prevValueArray);
 				addNumToBoard(valueArray);
 				drawBoard(windowArray, valueArray);
+				int r,c;
+				for(r=0; r < 4; r++)
+				{
+					for(c=0; c < 4; c++)
+					{
+						if(valueArray[r][c] == 2048)
+						{
+							won = true;
+						}
+					}
+				}
 			}
 		}else if(input == 'u'){
 			undo(valueArray, prevValueArray);
@@ -131,8 +153,22 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	// clear main screen
+	clear();
+
+	// print win message
+	int i;
+	for(i=0; i < 6; i++)
+	{
+		mvprintw((LINES/2)-3+i, (COLS/2)-22, win_message[i]);
+	}
+
+	getch();
+
 	// cleanly exit ncurses
 	endwin();
+
+	return 0;
 }
 
 void init()
@@ -199,29 +235,27 @@ void drawBoard(WINDOW *winArray[4][4], int values[4][4])
 			int colorNum;
 			switch(value)
 			{
-				case 2 :
+				case 2:
 					colorNum = 1; break;
-				case 4 :
+				case 4:
+				case 256:
 					colorNum = 2; break;
-				case 8 :
+				case 8:
+				case 512:
 					colorNum = 3; break;
-				case 16 :
+				case 16:
+				case 1024:
 					colorNum = 4; break;
-				case 32 :
+				case 32:
+				case 2048:
 					colorNum = 5; break;
-				case 64 :
+				case 64:
+				case 4096:
 					colorNum = 6; break;
-				case 128 :
+				case 128:
+				case 8192:
 					colorNum = 7; break;
-				case 256 :
-					colorNum = 2; break;
-				case 512 :
-					colorNum = 3; break;
-				case 1024 :
-					colorNum = 4; break;
-				case 2048 :
-					colorNum = 5; break;
-				default :
+				default:
 					colorNum = 0;
 			}
 
