@@ -15,7 +15,7 @@ bool mergeDown(int values[4][4]);
 void copyArray(int toBeCopied[4][4], int copy[4][4]);
 void undo(int values[4][4], int prevValues[4][4]);
 
-// make option to continue after winning
+// TODO: make option to continue after winning
 int main(int argc, char* argv[])
 {
 	const char *title[7] = {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 	int topPad = (lines-20)/2;
 
 	// print title if screen is large enough
-	if(columns >= 45 && lines >= 28)
+	if(columns >= 45 && lines >= 34)
 	{
 		attron(A_BOLD);
 		int i;
