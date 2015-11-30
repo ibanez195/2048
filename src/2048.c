@@ -14,8 +14,10 @@ bool mergeLeft(int values[4][4]);
 bool mergeDown(int values[4][4]);
 void copyArray(int toBeCopied[4][4], int copy[4][4]);
 void undo(int values[4][4], int prevValues[4][4]);
+bool boardIsFull(int values[4][4]);
+bool mergeIsAvailable(int r, int c, int values[4][4]);
+void printWinMessage();
 
-// TODO: make option to continue after winning
 int main(int argc, char* argv[])
 {
 	const char *title[7] = {
@@ -28,18 +30,13 @@ int main(int argc, char* argv[])
 		"    \\|_______|\\|_______|      \\|__|\\|_______|"
 	};
 
-	const char *win_message[6] = {
-		"__  ______  __  __   _       ______  _   ____",
-		"\\ \\/ / __ \\/ / / /  | |     / / __ \\/ | / / /",
-		" \\  / / / / / / /   | | /| / / / / /  |/ / / ",
-		" / / /_/ / /_/ /    | |/ |/ / /_/ / /|  /_/  ",
-		"/_/\\____/\\____/     |__/|__/\\____/_/ |_(_)   ",
-	};
 
 	// initialize ncurses
 	init();
 
 	bool won = false;
+	bool lost = false;
+	bool cont = false;
 
 
 	// array of windows to represent cells on board
@@ -97,7 +94,7 @@ int main(int argc, char* argv[])
 	drawBoard(windowArray, valueArray);
 
 	// main game logic loop
-	while(!won)
+	while((!won || cont) && !lost)
 	{
 		// create copy for undo purposes
 		int tempCopy[4][4];
@@ -140,12 +137,81 @@ int main(int argc, char* argv[])
 				{
 					for(c=0; c < 4; c++)
 					{
-						if(valueArray[r][c] == 2048)
+						if(valueArray[r][c] == 2048 && !won)
 						{
 							won = true;
+
+							// create window for display continue? message
+							WINDOW *continue_message;
+							continue_message = newwin(5, 24, (LINES/2)-2, (COLS/2)-12);
+							mvwprintw(continue_message, 2, 4, "Continue? (Y/N)");
+							box(continue_message, 0, 0);
+							wrefresh(continue_message);
+							refresh();
+							char input = ' ';
+
+							// wait for valid input
+							while(input != 'y' && input != 'Y' && input != 'n' && input != 'N')
+							{
+								input = getch();
+							}
+
+							// if continuing redraw board
+							if(input == 'y' || input == 'Y')
+							{
+								cont = true;
+
+								// redraw window array
+								int r, c;
+								for(r = 0; r < 4; r++)
+								{
+									for(c = 0; c < 4; c++)
+									{
+										box(windowArray[r][c], 0, 0);
+										refresh();
+										wrefresh(windowArray[r][c]);
+									}
+								}
+
+								drawBoard(windowArray, valueArray);
+								refresh();
+							}
+						}
+						// if not continuing print win message
+						if(won && !cont)
+						{
+							printWinMessage();
+							exit(0);
 						}
 					}
 				}
+			}
+			// detect if board is full and no moves are available
+			if(boardIsFull(valueArray))
+			{
+				lost = true;
+
+				int r, c;
+				for(r = 0; r < 4; r++)
+				{
+					for(c = 0; c < 4; c++)
+					{
+						if(mergeIsAvailable(r, c, valueArray))
+						{
+							lost = false;
+						}
+					}
+				}
+			}
+
+			// print lose message if lost
+			if(lost)
+			{
+				clear();
+				mvprintw(LINES/2, (COLS/2)-8, "You suck and lose");
+				getch();
+				endwin();
+				exit(1);
 			}
 		}else if(input == 'u'){
 			undo(valueArray, prevValueArray);
@@ -153,20 +219,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// clear main screen
-	clear();
 
-	// print win message
-	int i;
-	for(i=0; i < 6; i++)
-	{
-		mvprintw((LINES/2)-3+i, (COLS/2)-22, win_message[i]);
-	}
-
-	getch();
-
-	// cleanly exit ncurses
-	endwin();
 
 	return 0;
 }
@@ -178,7 +231,6 @@ void init()
 	cbreak();
 	noecho();
 	curs_set(0);
-	//nodelay(stdscr, TRUE);
 
 	start_color();
 	use_default_colors();
@@ -556,4 +608,68 @@ void undo(int values[4][4], int prevValues[4][4])
 			values[r][c] = prevValues[r][c];
 		}
 	}
+}
+
+bool boardIsFull(int values[4][4])
+{
+	bool isFull = true;
+	int r, c;
+	for(r = 0; r < 4; r++)
+	{
+		for(c = 0; c < 4; c++)
+		{
+			if(values[r][c] == 0)
+			{
+				isFull = false;
+			}
+		}
+	}
+
+	return isFull;
+}
+
+bool mergeIsAvailable(int r, int c, int values[4][4])
+{
+	bool canMerge = false;
+	// above
+	if(r > 0 && values[r-1][c] == values[r][c])
+		canMerge = true;
+	// right
+	if(c < 3 && values[r][c+1] == values[r][c])
+		canMerge = true;
+	// below
+	if(r < 3 && values[r+1][c] == values[r][c])
+		canMerge = true;
+	// left
+	if(c > 0 && values[r][c-1] == values[r][c])
+		canMerge = true;
+
+	return canMerge;
+}
+
+void printWinMessage()
+{
+	const char *win_message[6] = {
+		"__  ______  __  __   _       ______  _   ____",
+		"\\ \\/ / __ \\/ / / /  | |     / / __ \\/ | / / /",
+		" \\  / / / / / / /   | | /| / / / / /  |/ / / ",
+		" / / /_/ / /_/ /    | |/ |/ / /_/ / /|  /_/  ",
+		"/_/\\____/\\____/     |__/|__/\\____/_/ |_(_)   ",
+	};
+
+	// clear main screen
+	clear();
+
+	// print win message
+	int i;
+	for(i=0; i < 6; i++)
+	{
+		mvprintw((LINES/2)-3+i, (COLS/2)-22, win_message[i]);
+	}
+
+	getch();
+
+	// cleanly exit ncurses
+	endwin();
+	
 }
