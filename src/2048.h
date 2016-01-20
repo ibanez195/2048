@@ -1,0 +1,12 @@
+void init();
+void addNumToBoard(int values[4][4]);
+void drawBoard(WINDOW *winArray[4][4], int values[4][4]);
+bool mergeRight(int values[4][4]);
+bool mergeUp(int values[4][4]);
+bool mergeLeft(int values[4][4]);
+bool mergeDown(int values[4][4]);
+void copyArray(int toBeCopied[4][4], int copy[4][4]);
+void undo(int values[4][4], int prevValues[4][4]);
+bool boardIsFull(int values[4][4]);
+bool mergeIsAvailable(int r, int c, int values[4][4]);
+void printWinMessage();
