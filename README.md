@@ -2,8 +2,7 @@
 2048 clone using ncurses
 
 ### Compile Instructions:
-  cd 2048;
-  make;
+    make
   
 ### Run:
   ./2048
